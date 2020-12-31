@@ -9,7 +9,7 @@
 <br />-- Right-click the chrome webdriver file and copy the absolute path 
 <br />-- Lastly, paste the copied text in the driver path in hgtv.py (there are two places and they are marked by comments)
 
-If you have any questions or problems with the program, feel free to message me on Reddit or Twitter.
+If you have any questions or problems with the program, feel free to message me on Reddit or Twitter. 
 <br />**Reddit**: 
 [christhedev_](https://www.reddit.com/user/christhedev_)
 <br /> **Twitter**:
