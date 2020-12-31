@@ -1,4 +1,4 @@
-# webscrapers-bots
+# AutoHGTV
 This is a bot that makes entering for the 2021 HGTV/Food Network giveaway that much easier. With hgtv.py, all you have to do is input your information in once and then every day all you will need to do is enter your last name. Your input is stored in a database so that you never have to retype any of your information. It was created in python and was a fun project that I enjoyed completing over the past couple days. 
 Requirements:
 -- The selenium module is required for this program to run so you must run pip install selenium
