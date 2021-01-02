@@ -1,91 +1,118 @@
-# HGTV/Food Network 2021 Home Giveaway Entry Bot
-# Stores information in a database so all you have to do to fill out both forms
-# after originally entering all of your information is type your last name
+"""
+@author Chris Kade
+@editor Diego O Hernandez
 
+HGTV/Food Network 2021 Home Giveaway Entry Bot
+Stores information in a database so all you have to do to fill out both forms
+after originally entering all of your information is type your last name
+"""
+
+import enum
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 import time
 import sqlite3
 
-# This function stores all of the information to input if it
-# is the users first time entering the contest for the Food Network
-def init_FN():
-    first = driver.find_element_by_id('name_Firstname')
+class Month(enum.Enum):
+    JAN = 2
+    FEB = 3
+    MAR = 4
+    APR = 5
+    MAY = 6
+    JUN = 7
+    JUL = 8
+    AUG = 9
+    SEP = 10
+    OCT = 11
+    NOV = 12
+    DEC = 13
+
+class Sex(enum.Enum):
+    F = 1
+    M = 2
+
+class UserStatus(enum.Enum):
+    NEW = 1
+    RETURNING = 2
+
+def construct_month_path(month_enum_object, month):
+    assert month_enum_object[month]
+    
+    option_value = month_enum_object[month].value
+    month_path = '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/'
+    return month_path + 'option[{}]'.format(option_value)
+
+def construct_gender_path(sex_enum_object, sex):
+    assert sex_enum_object[sex]
+    
+    option_value = sex_enum_object[sex].value
+    sex_path = '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[6]/div[2]/'    
+    return sex_path + 'div[{}]/input'.format(option_value)
+
+def prompt_user_status():
+    description = "This program helps you sign up for the HGTV giveaway \n without having to manually enter all account information. \n"
+    new_user = "--- If you are a first time user, type NEW. \n"
+    returning = "--- If you're already in the database type RETURNING. \n"
+    
+    valid_entry = False
+    while (not valid_entry):
+        user_status = input(description + new_user + returning)
+        if user_status.upper() in UserStatus._member_names_:
+            valid_entry = True
+    return user_status.upper()
+
+
+def init_account_info(driver_instance):
+    """
+    This function stores all of the information to input for new user
+    entering the Food Network contest for the first time.
+    """
+
+    first = driver_instance.find_element_by_id('name_Firstname')
     first.send_keys(store[0][1])
     time.sleep(3)
-    last = driver.find_element_by_id('name_Lastname')
+    last = driver_instance.find_element_by_id('name_Lastname')
     last.send_keys(store[0][2])
     time.sleep(3)
-    address = driver.find_element_by_id('address_Address1')
+    address = driver_instance.find_element_by_id('address_Address1')
     address.send_keys(store[0][3])
     time.sleep(3)
-    city = driver.find_element_by_id('address_City')
+    city = driver_instance.find_element_by_id('address_City')
     city.send_keys(store[0][4])
     time.sleep(3)
-    driver.find_element_by_xpath(
+
+    driver_instance.find_element_by_xpath(
         '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[4]/div[2]/div[4]/div[1]/select/option[24]').click()
     time.sleep(3)
-    zip = driver.find_element_by_id('address_Zip')
+
+    zip = driver_instance.find_element_by_id('address_Zip')
     zip.send_keys(store[0][5])
     time.sleep(3)
-    phone_num = driver.find_element_by_id('phone')
+    phone_num = driver_instance.find_element_by_id('phone')
     phone_num.send_keys(store[0][6])
     time.sleep(3)
+
     gender = store[0][7]
-    if gender == 'm':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[6]/div[2]/div[2]/input').click()
-    elif gender == 'f':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[6]/div[2]/div[1]/input').click()
+    sex_path = construct_gender_path(Sex, gender.upper())
+    driver_instance.find_element_by_xpath(sex_path).click()
     time.sleep(3)
+    
     bday_month = store[0][8]
-    if bday_month == 'jan':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[2]').click()
-    elif bday_month == 'feb':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[4]').click()
-    elif bday_month == 'mar':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[4]').click()
-    elif bday_month == 'apr':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[5]').click()
-    elif bday_month == 'may':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[6]').click()
-    elif bday_month == 'jun':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[7]').click()
-    elif bday_month == 'jul':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[8]').click()
-    elif bday_month == 'aug':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[9]').click()
-    elif bday_month == 'sep':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[10]').click()
-    elif bday_month == 'oct':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[11]').click()
-    elif bday_month == 'nov':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[12]').click()
-    elif bday_month == 'dec':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[13]').click()
+    month_path = construct_month_path(Month, bday_month.upper())
+    driver_instance.find_element_by_xpath(month_path).click()
+
     time.sleep(3)
-    bday = driver.find_element_by_id('date_of_birth_day')
+    bday = driver_instance.find_element_by_id('date_of_birth_day')
     bday.send_keys(store[0][9])
     time.sleep(3)
-    bday_year = driver.find_element_by_id('date_of_birth_year')
+    bday_year = driver_instance.find_element_by_id('date_of_birth_year')
     bday_year.send_keys(store[0][10])
     time.sleep(3)
-    cable = driver.find_element_by_xpath(
+    cable = driver_instance.find_element_by_xpath(
         '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[8]/div[2]/div[1]/select/option[10]').click()
     time.sleep(3)
+    
+    return driver_instance
 
 # This function opens the driver and completes the entry form
 def fill_FN():
@@ -93,100 +120,24 @@ def fill_FN():
     driver.get('https://www.foodnetwork.com/sponsored/sweepstakes/hgtv-dream-home-sweepstakes')
     driver.maximize_window()
     time.sleep(3)
+    
     the_iframe = driver.find_element_by_id('ngxFrame186481')
     driver.switch_to.frame(the_iframe)
+    
     email = driver.find_element_by_id('xReturningUserEmail')
     email.send_keys(store[0][0])
     time.sleep(3)
+    
     button = driver.find_element_by_id('xCheckUser')
     button.click()
     time.sleep(3)
     try:
-        init_FN()
+        driver = init_account_info(driver)
     except:
         pass
     submit = driver.find_element_by_xpath('/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[2]/div/button/span').click()
     time.sleep(3)
     driver.close()
-
-# This function stores all of the information if it is the users
-# first time entering the contest
-def init_HGTV():
-    first = driver.find_element_by_id('name_Firstname')
-    first.send_keys(store[0][1])
-    time.sleep(3)
-    last = driver.find_element_by_id('name_Lastname')
-    last.send_keys(store[0][2])
-    time.sleep(3)
-    address = driver.find_element_by_id('address_Address1')
-    address.send_keys(store[0][3])
-    time.sleep(3)
-    city = driver.find_element_by_id('address_City')
-    city.send_keys(store[0][4])
-    time.sleep(3)
-    driver.find_element_by_xpath(
-        '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[4]/div[2]/div[4]/div[1]/select/option[24]').click()
-    time.sleep(3)
-    zip = driver.find_element_by_id('address_Zip')
-    zip.send_keys(store[0][5])
-    time.sleep(3)
-    phone_num = driver.find_element_by_id('phone')
-    phone_num.send_keys(store[0][6])
-    time.sleep(3)
-    gender = store[0][7]
-    if gender == 'm':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[6]/div[2]/div[2]/input').click()
-    elif gender == 'f':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[6]/div[2]/div[1]/input').click()
-    time.sleep(3)
-    bday_month = store[0][8]
-    if bday_month == 'jan':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[2]').click()
-    elif bday_month == 'feb':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[4]').click()
-    elif bday_month == 'mar':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[4]').click()
-    elif bday_month == 'apr':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[5]').click()
-    elif bday_month == 'may':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[6]').click()
-    elif bday_month == 'jun':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[7]').click()
-    elif bday_month == 'jul':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[8]').click()
-    elif bday_month == 'aug':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[9]').click()
-    elif bday_month == 'sep':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[10]').click()
-    elif bday_month == 'oct':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[11]').click()
-    elif bday_month == 'nov':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[12]').click()
-    elif bday_month == 'dec':
-        driver.find_element_by_xpath(
-            '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/option[13]').click()
-    time.sleep(3)
-    bday = driver.find_element_by_id('date_of_birth_day')
-    bday.send_keys(store[0][9])
-    time.sleep(3)
-    bday_year = driver.find_element_by_id('date_of_birth_year')
-    bday_year.send_keys(store[0][10])
-    time.sleep(3)
-    cable = driver.find_element_by_xpath('/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[8]/div[2]/div[1]/select/option[10]').click()
-    time.sleep(3)
 
 # This function opens the driver and completes the form for hgtv
 def fill_HGTV():
@@ -194,14 +145,16 @@ def fill_HGTV():
     driver.get('https://www.hgtv.com/sweepstakes/hgtv-dream-home/sweepstakes/?ocid=direct')
     driver.maximize_window()
     time.sleep(3)
+
     iframe = driver.find_element_by_id('ngxFrame186475')
     driver.switch_to.frame(iframe)
     time.sleep(3)
+
     email = driver.find_element_by_id('xReturningUserEmail')
     email.send_keys(store[0][0])
     next = driver.find_element_by_id('xCheckUser').click()
     try:
-        init_HGTV()
+        driver = init_account_info(driver)
     except:
         pass
     submit = driver.find_element_by_xpath(
@@ -211,13 +164,7 @@ def fill_HGTV():
 
 
 
-first_use = input('''
-Made by Chris Kade
-This program allows you to sign up for the HGTV giveaway without having
-to go through the hassle of manually entering all of the information.
---- If this is your first time using this program, type the letter f. 
---- If you're already in the database type the letter c.
-''')
+
 conn = sqlite3.connect('HGTV.db')
 c = conn.cursor()
 try:
@@ -235,7 +182,9 @@ try:
     bday_year integer)""")
 except:
     pass
-if first_use == 'f':
+
+user_status = prompt_user_status()
+if UserStatus[user_status] == UserStatus.NEW:
     email = input('Enter your email: ')
     first = input('Enter your first name: ')
     last = input('Enter your last name: ')
