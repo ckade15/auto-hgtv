@@ -9,9 +9,13 @@ after originally entering all of your information is type your last name
 
 import enum
 from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 import sqlite3
+
 
 class Month(enum.Enum):
     JAN = 2
@@ -27,33 +31,38 @@ class Month(enum.Enum):
     NOV = 12
     DEC = 13
 
+
 class Sex(enum.Enum):
     F = 1
     M = 2
+
 
 class UserStatus(enum.Enum):
     NEW = 1
     RETURNING = 2
 
+
 def construct_month_path(month_enum_object, month):
     assert month_enum_object[month]
-    
+
     option_value = month_enum_object[month].value
     month_path = '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[7]/div[2]/div[1]/select/'
     return month_path + 'option[{}]'.format(option_value)
 
+
 def construct_gender_path(sex_enum_object, sex):
     assert sex_enum_object[sex]
-    
+
     option_value = sex_enum_object[sex].value
-    sex_path = '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[6]/div[2]/'    
+    sex_path = '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[6]/div[2]/'
     return sex_path + 'div[{}]/input'.format(option_value)
+
 
 def prompt_user_status():
     description = "This program helps you sign up for the HGTV giveaway \n without having to manually enter all account information. \n"
     new_user = "--- If you are a first time user, type NEW. \n"
     returning = "--- If you're already in the database type RETURNING. \n"
-    
+
     valid_entry = False
     while (not valid_entry):
         user_status = input(description + new_user + returning)
@@ -70,64 +79,62 @@ def init_account_info(driver_instance):
 
     first = driver_instance.find_element_by_id('name_Firstname')
     first.send_keys(store[0][1])
-    time.sleep(3)
     last = driver_instance.find_element_by_id('name_Lastname')
     last.send_keys(store[0][2])
-    time.sleep(3)
     address = driver_instance.find_element_by_id('address_Address1')
     address.send_keys(store[0][3])
-    time.sleep(3)
     city = driver_instance.find_element_by_id('address_City')
     city.send_keys(store[0][4])
-    time.sleep(3)
+
 
     driver_instance.find_element_by_xpath(
         '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[4]/div[2]/div[4]/div[1]/select/option[24]').click()
-    time.sleep(3)
+
 
     zip = driver_instance.find_element_by_id('address_Zip')
     zip.send_keys(store[0][5])
-    time.sleep(3)
+
     phone_num = driver_instance.find_element_by_id('phone')
     phone_num.send_keys(store[0][6])
-    time.sleep(3)
+
 
     gender = store[0][7]
     sex_path = construct_gender_path(Sex, gender.upper())
     driver_instance.find_element_by_xpath(sex_path).click()
-    time.sleep(3)
-    
+
+
     bday_month = store[0][8]
     month_path = construct_month_path(Month, bday_month.upper())
     driver_instance.find_element_by_xpath(month_path).click()
 
-    time.sleep(3)
+
     bday = driver_instance.find_element_by_id('date_of_birth_day')
     bday.send_keys(store[0][9])
-    time.sleep(3)
+
     bday_year = driver_instance.find_element_by_id('date_of_birth_year')
     bday_year.send_keys(store[0][10])
-    time.sleep(3)
+
     cable = driver_instance.find_element_by_xpath(
         '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[1]/div/fieldset/div[8]/div[2]/div[1]/select/option[10]').click()
-    time.sleep(3)
-    
+
+
     return driver_instance
+
 
 # This function opens the driver and completes the entry form
 def fill_FN():
-    driver = webdriver.Chrome(r'') # I left the path for the webdriver empty for you to copy your path to the specific chrome driver
+    driver = webdriver.Chrome(ChromeDriverManager().install())
     driver.get('https://www.foodnetwork.com/sponsored/sweepstakes/hgtv-dream-home-sweepstakes')
     driver.maximize_window()
     time.sleep(3)
-    
+
     the_iframe = driver.find_element_by_id('ngxFrame186481')
     driver.switch_to.frame(the_iframe)
-    
+
     email = driver.find_element_by_id('xReturningUserEmail')
     email.send_keys(store[0][0])
-    time.sleep(3)
-    
+
+
     button = driver.find_element_by_id('xCheckUser')
     button.click()
     time.sleep(3)
@@ -135,34 +142,40 @@ def fill_FN():
         driver = init_account_info(driver)
     except:
         pass
-    submit = driver.find_element_by_xpath('/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[2]/div/button/span').click()
+    try:
+        submit = driver.find_element_by_xpath('/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[1]/div[2]/div/button/span')
+        driver.execute_script("arguments[0].click();", submit)
+    except:
+        pass
+
     time.sleep(3)
-    driver.close()
+
+
 
 # This function opens the driver and completes the form for hgtv
 def fill_HGTV():
-    driver = webdriver.Chrome(r'') # I left the path for the webdriver empty for you to copy your path to the specific chrome driver
+    driver = webdriver.Chrome(ChromeDriverManager().install())
     driver.get('https://www.hgtv.com/sweepstakes/hgtv-dream-home/sweepstakes/?ocid=direct')
     driver.maximize_window()
     time.sleep(3)
 
     iframe = driver.find_element_by_id('ngxFrame186475')
     driver.switch_to.frame(iframe)
-    time.sleep(3)
+
 
     email = driver.find_element_by_id('xReturningUserEmail')
     email.send_keys(store[0][0])
+
     next = driver.find_element_by_id('xCheckUser').click()
+    time.sleep(3)
     try:
         driver = init_account_info(driver)
     except:
         pass
-    submit = driver.find_element_by_xpath(
-        '/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[2]/div[2]/div/button').click()
-    time.sleep(10)
+    submit = driver.find_element_by_xpath('/html/body/div[1]/div/main/section/div/div/div/div/div/div[1]/div/div[2]/form[2]/div[2]/div/button')
+    driver.execute_script("arguments[0].click();",submit)
+    time.sleep(3)
     driver.close()
-
-
 
 
 conn = sqlite3.connect('HGTV.db')
