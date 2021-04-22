@@ -1,6 +1,5 @@
 """
 @author Chris Kade
-@editor Diego O Hernandez
 
 HGTV/Food Network 2021 Home Giveaway Entry Bot
 Stores information in a database so all you have to do to fill out both forms
